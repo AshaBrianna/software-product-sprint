@@ -2,7 +2,7 @@
 html { 
     color: #17252A;
     font-family: 'Trebuchet MS', Arial, Helvetica, monospace, sans-serif;
-    background: url("https://cdn.wallpapersafari.com/70/64/xZXEBd.jpg") no-repeat center center fixed;
+    background: url("https://mcdn.wallpapersafari.com/medium/5/12/Wuv85n.png") no-repeat center center fixed;
     /* background: url("https://images.unsplash.com/photo-1511184150666-9bb7d41a88f4?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=2850&q=80") no-repeat center center fixed; */
     -webkit-background-size: cover;
     /* background: rgb(158, 211, 207); */
@@ -22,16 +22,21 @@ h1{
     text-shadow: 0 0 30px khaki;
 }
 .intro{
-
     font-size: 25px;
     /* color: #17252A; */
     color: #FEFFFF;
     /* text-shadow: 0 0 30px saddlebrown; */
     text-indent: 60px;
     text-align: left;
-    margin: 170px;
     /* background:rgba(85, 40, 8, 0.3); */
     /* box-shadow: 30px 30px 30px 30px rgba(85, 40, 8, 0.3); */
+}
+
+.oneliner{
+    font-size: 25px;
+    color: #FEFFFF;
+    text-align: center;
+    margin: 30px;
 }
 
 table {
