@@ -14,7 +14,11 @@
 
 package com.google.sps.servlets;
 
+import com.google.gson.Gson;
+import java.util.Date;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -24,9 +28,20 @@ import javax.servlet.http.HttpServletResponse;
 @WebServlet("/data")
 public class DataServlet extends HttpServlet {
 
-  @Override
-  public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
-    response.setContentType("text/html;");
-    response.getWriter().println("Hello Asha!");
-  }
+    @Override
+    public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        
+        //modify DataServlet to contain an ArrayList<String> variable
+        ArrayList<String> messages = new ArrayList<String>();
+        messages.add("This is the first message");
+        messages.add("This is the second message");
+        messages.add("This is the third message");
+        
+        //convert to Json using Gson
+        Gson gson = new Gson();
+        String json = gson.toJson(messages);
+
+        response.setContentType("text/html;");
+        response.getWriter().println(json);
+    }
 }
