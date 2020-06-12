@@ -3,7 +3,6 @@
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-//
 //     https://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing, software
@@ -25,8 +24,20 @@ function addRandomFact() {
   funfactContainer.innerText = funfact;
 }
 
-function getGreetingUsingArrowFunctions() {
-  fetch('/data').then(response => response.text()).then((greeting) => {
-    document.getElementById('greeting-container').innerText = greeting;
-  });
+// function getGreetingUsingArrowFunctions() {
+//   fetch('/data').then(response => response.text()).then((greeting) => {
+//     document.getElementById('greeting-container').innerText = greeting;
+//   });
+// }
+
+//fetch JSON string from the server
+function getGreetingUsingArrowFunctions(){
+    fetch('/data')  // sends a request to /my-data-url
+    .then(response => response.json()) // parses the response as JSON
+    .then((greeting) => { // now we can reference the fields in myObject!
+        // console.log(myObject.x);
+        // console.log(myObject.y);
+        // console.log(myObject.z);
+        document.getElementById('greeting-container').innerText = greeting;
+    });
 }
