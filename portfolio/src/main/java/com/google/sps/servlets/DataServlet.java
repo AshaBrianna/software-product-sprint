@@ -15,6 +15,9 @@
 package com.google.sps.servlets;
 
 import com.google.gson.Gson;
+import com.google.appengine.api.datastore.DatastoreService;
+import com.google.appengine.api.datastore.DatastoreServiceFactory;
+import com.google.appengine.api.datastore.Entity;
 import java.util.Date;
 import java.io.IOException;
 import java.util.Arrays;
@@ -25,24 +28,16 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-// /** Servlet that returns some example content. TODO: modify this file to handle comments data */
-// @WebServlet("/data")
-// public class DataServlet extends HttpServlet {
-
-//     
-// }
-
-
 /** Servlet that processes text. */
 @WebServlet("/text")
 public final class DataServlet extends HttpServlet {
-    //modify DataServlet to contain an ArrayList<String> variable
     
+    //modify DataServlet to contain an ArrayList<String> variable 
     private ArrayList<String> allComments = new ArrayList<String>();
     
     @Override
     public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        response.setContentType("text/html");
+        response.setContentType("application/json");
         //convert to Json using Gson
         String json = new Gson().toJson(allComments);
         response.getWriter().println(json);
@@ -55,10 +50,21 @@ public final class DataServlet extends HttpServlet {
         // add to comment collection
         allComments.add(request.getParameter("text-input"));
 
+        String title = request.getParameter("text-input");
+        long timestamp = System.currentTimeMillis();
+
+        Entity taskEntity = new Entity("Task");
+        taskEntity.setProperty("text-input", title);
+        taskEntity.setProperty("timestamp", timestamp);
+
+        DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
+        datastore.put(taskEntity);
+
         // Respond with the result.
         response.setContentType("text/html;");
         response.getWriter().println(text);
         response.sendRedirect("/commentPage.html");
+
     }
 
     /**
