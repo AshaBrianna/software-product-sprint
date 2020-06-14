@@ -11,17 +11,20 @@
     </head>
     <body>
         <form action="/text" method="POST">
-            <p>Leave a comment!</p>
-            <textarea name="textInput"> </textarea>
+            <h1>Leave a comment!</h1>
+            <p class = "oneliner"> Your Name:</p>
+            <textarea name="author"> </textarea>
+            <p class ="oneliner">Your Message:</p>
+            <textarea name="message"> </textarea>
             <br/><br/>
             <input type="submit" />
         </form>
         <br/><br/>
-        <div id="text">
-            <p>Click here to view the comments:</p>
-            <button onclick="getTextUsingArrowFunctions()"> View Comments</button>
-        <div id="text-container"></div>
+        <div>
+            <button onclick="loadComments()"> View the comments!</button>
+            <ul id="comment-container"></ul>
         </div>
+        
         <br/><br/>
         <div>
             Return to the main page:

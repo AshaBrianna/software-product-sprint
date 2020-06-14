@@ -13,8 +13,8 @@
 // limitations under the License.
 
 package com.google.sps.servlets;
-
 import com.google.gson.Gson;
+import com.google.sps.data.Comment;
 import java.io.IOException;
 import com.google.appengine.api.datastore.DatastoreService;
 import com.google.appengine.api.datastore.DatastoreServiceFactory;
@@ -31,50 +31,38 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;    
 
-/** Servlet that processes text. */
 @WebServlet("/text")
 public final class DataServlet extends HttpServlet {
-    
     @Override
     public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        Query query = new Query("Message").addSort("timestamp", SortDirection.DESCENDING);
+        Query query = new Query("Comment").addSort("timestamp", SortDirection.DESCENDING);
         DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
         PreparedQuery results = datastore.prepare(query);
-        ArrayList<String> comments = new ArrayList<>();
+        List<Comment> comments = new ArrayList<>();
         for (Entity entity : results.asIterable()) {
             long id = entity.getKey().getId();
-            String title = (String) entity.getProperty("textInput");
+            String message = (String) entity.getProperty("message");
+            String author = (String) entity.getProperty("author");
             long timestamp = (long) entity.getProperty("timestamp");
-            comments.add(title);
+            Comment comment = new Comment(id, author, message, timestamp);
+            comments.add(comment);
         }
+        Gson gson = new Gson();
         response.setContentType("application/json;");
-        String json = new Gson().toJson(comments);
-        response.getWriter().println(json);
+        response.getWriter().println(gson.toJson(comments));
     }
-
     @Override
     public void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
         // Get the input from the form.
-        String text = getParameter(request, "textInput", "");
-        String title = request.getParameter("textInput");
+        String message = request.getParameter("message");
+        String author = request.getParameter("author");
         long timestamp = System.currentTimeMillis();
-        Entity messageEntity = new Entity("Message");
-        messageEntity.setProperty("textInput", title);
-        messageEntity.setProperty("timestamp", timestamp);
+        Entity commentEntity = new Entity("Comment");
+        commentEntity.setProperty("message", message);
+        commentEntity.setProperty("author", author);
+        commentEntity.setProperty("timestamp", timestamp);
         DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
-        datastore.put(messageEntity);
-        // Respond with the result.
-        response.setContentType("text/html;");
-        response.getWriter().println(text);
+        datastore.put(commentEntity);
         response.sendRedirect("/commentPage.html");
-    }
-    /**
-    * @return the request parameter, or the default value if the parameter
-    *         was not specified by the client
-    */
-    private String getParameter(HttpServletRequest request, String name, String defaultValue) {
-        String value = request.getParameter(name);
-        if (value == null) { return defaultValue;}
-        return value;
     }
 }

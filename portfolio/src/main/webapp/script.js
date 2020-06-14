@@ -11,7 +11,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
 function addRandomFact() {
     const funfacts =
         ["I have a orange, long hair Maine Coon cat mix named Kitty Kitty", "I'm 6'1\"", "I can make origami cranes without looking at the paper", "I'm still in denial of my fear of heights", "I make excellent baklava", "I don't know how to ride a bike", "My highschool volleyball team won the CA State Championships", "I have 5 wisdom teeth"];
@@ -22,8 +21,23 @@ function addRandomFact() {
     funfactContainer.innerText = funfact;
 }
 
-function getTextUsingArrowFunctions() {
-    fetch('/text').then(response => response.json()).then((text) => {
-        document.getElementById('text-container').innerText = text;
+function loadComments() {
+  fetch('/text').then(response => response.json()).then((comments) => {
+    const commentsListElement = document.getElementById('comment-container');
+    comments.forEach((comment) => {
+        const theCommentElement = document.createElement('li');
+        theCommentElement.className = 'comment';
+        theCommentElement.innerHTML = '';
+        // theCommentElement.appendChild(createListElement('Post date: ' + comment.timestamp));
+        theCommentElement.appendChild(createListElement('Name: ' + comment.author));
+        theCommentElement.appendChild(createListElement('Comment: ' + comment.message + "\n\n"));
+        commentsListElement.appendChild(theCommentElement);
     });
+  });
+}
+
+function createListElement(text) {
+  const liElement = document.createElement('li');
+  liElement.innerText = text;
+  return liElement;
 }
