@@ -29,8 +29,7 @@ function loadComments() {
         theCommentElement.className = 'comment';
         theCommentElement.innerHTML = '';
         // theCommentElement.appendChild(createListElement('Post date: ' + comment.timestamp));
-        theCommentElement.appendChild(createListElement('Name: ' + comment.author));
-        theCommentElement.appendChild(createListElement('Comment: ' + comment.message + "\n\n"));
+        theCommentElement.appendChild(createListElement("\"" + comment.message + "\"-" + comment.author));
         commentsListElement.appendChild(theCommentElement);
     });
   });
