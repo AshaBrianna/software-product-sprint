@@ -15,67 +15,66 @@
 package com.google.sps.servlets;
 
 import com.google.gson.Gson;
+import java.io.IOException;
 import com.google.appengine.api.datastore.DatastoreService;
 import com.google.appengine.api.datastore.DatastoreServiceFactory;
 import com.google.appengine.api.datastore.Entity;
+import com.google.appengine.api.datastore.Query;
+import com.google.appengine.api.datastore.PreparedQuery;
+import com.google.appengine.api.datastore.Query.SortDirection;
 import java.util.Date;
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.List;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpServletResponse;    
 
 /** Servlet that processes text. */
 @WebServlet("/text")
 public final class DataServlet extends HttpServlet {
     
-    //modify DataServlet to contain an ArrayList<String> variable 
-    private ArrayList<String> allComments = new ArrayList<String>();
-    
     @Override
     public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        response.setContentType("application/json");
-        //convert to Json using Gson
-        String json = new Gson().toJson(allComments);
+        Query query = new Query("Message").addSort("timestamp", SortDirection.DESCENDING);
+        DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
+        PreparedQuery results = datastore.prepare(query);
+        ArrayList<String> comments = new ArrayList<>();
+        for (Entity entity : results.asIterable()) {
+            long id = entity.getKey().getId();
+            String title = (String) entity.getProperty("textInput");
+            long timestamp = (long) entity.getProperty("timestamp");
+            comments.add(title);
+        }
+        response.setContentType("application/json;");
+        String json = new Gson().toJson(comments);
         response.getWriter().println(json);
     }
+
     @Override
     public void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
         // Get the input from the form.
-        String text = getParameter(request, "text-input", "");
-
-        // add to comment collection
-        allComments.add(request.getParameter("text-input"));
-
-        String title = request.getParameter("text-input");
+        String text = getParameter(request, "textInput", "");
+        String title = request.getParameter("textInput");
         long timestamp = System.currentTimeMillis();
-
-        Entity taskEntity = new Entity("Task");
-        taskEntity.setProperty("text-input", title);
-        taskEntity.setProperty("timestamp", timestamp);
-
+        Entity messageEntity = new Entity("Message");
+        messageEntity.setProperty("textInput", title);
+        messageEntity.setProperty("timestamp", timestamp);
         DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
-        datastore.put(taskEntity);
-
+        datastore.put(messageEntity);
         // Respond with the result.
         response.setContentType("text/html;");
         response.getWriter().println(text);
         response.sendRedirect("/commentPage.html");
-
     }
-
     /**
     * @return the request parameter, or the default value if the parameter
     *         was not specified by the client
     */
     private String getParameter(HttpServletRequest request, String name, String defaultValue) {
         String value = request.getParameter(name);
-        if (value == null) {
-            return defaultValue;
-        }
+        if (value == null) { return defaultValue;}
         return value;
     }
 }
