@@ -22,7 +22,7 @@ function addRandomFact() {
 }
 
 function loadComments() {
-  fetch('/text').then(response => response.json()).then((comments) => {
+  fetch('/text').then(response => response.json()).then((comments) => { // Fetch = RPC request to server and waits then gets response
     const commentsListElement = document.getElementById('comment-container');
     comments.forEach((comment) => {
         const theCommentElement = document.createElement('li');
@@ -30,13 +30,34 @@ function loadComments() {
         theCommentElement.innerHTML = '';
         // theCommentElement.appendChild(createListElement('Post date: ' + comment.timestamp));
         theCommentElement.appendChild(createListElement("\"" + comment.message + "\"-" + comment.author));
-        commentsListElement.appendChild(theCommentElement);
+        commentsListElement.appendChild(theCommentElement); //appendChild i
     });
   });
-}
+} //lamda functions, anonymous functions, NOTE: in Javascript, read Javascript promises
 
 function createListElement(text) {
   const liElement = document.createElement('li');
   liElement.innerText = text;
   return liElement;
+}
+//creating list element twiceh
+
+function requestTranslation() {
+    const text = document.getElementById('text').value;
+    const languageCode = document.getElementById('language').value;
+
+    const resultContainer = document.getElementById('result');
+    resultContainer.innerText = 'Loading...';
+
+    const params = new URLSearchParams();
+    params.append('text', text);
+    params.append('languageCode', languageCode);
+
+    fetch('/translate', {
+        method: 'POST',
+        body: params
+    }).then(response => response.text())
+    .then((translatedMessage) => {
+        resultContainer.innerText = translatedMessage;
+    });
 }

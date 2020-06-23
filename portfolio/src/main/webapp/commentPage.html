@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 
 <html>
+
     <head>
         <meta charset="UTF-8">
         <title> Asha's Portfolio </title>
@@ -9,25 +10,43 @@
             href="style.css">
         <script src="script.js"></script>
     </head>
+
+    <h1>Leave a comment!</h1>
+
     <body>
+        <div class="container">
         <form action="/text" method="POST">
-            <h1>Leave a comment!</h1>
-            <p class = "oneliner"> Your Name:</p>
-            <textarea name="author"> </textarea>
-            <p class ="oneliner">Your Message:</p>
-            <textarea name="message"> </textarea>
-            <br/><br/>
-            <input type="submit" />
+
+            <label>Full Name</label>
+            <input type="text" id="fname" name="author" placeholder="Your name..">
+    
+            <label>Message</label>
+            <textarea type="text" id="result" name="message" placeholder = "Write something..." style="height:200px"></textarea>
+
+            <input type="submit" value="Submit">
+
         </form>
+
         <br/><br/>
+
+        <label>Need translation? Type your message below, then select the language you'd like it translated into and click 'Translate'.</label>
+        <input type="text" id="text" placeholder="Message to be translated...">
+            <select id="language">
+                <option value="es">English</option>
+                <option value="fr">French</option>
+                <option value="es">Spanish</option>
+            </select>
+            <button onclick="requestTranslation()"> Translate </button>
+
         <div>
-            <button onclick="loadComments()"> View the comments!</button>
-            <ul id="comment-container"></ul>
+            <button onclick="loadComments()"> View the comments! </button>
+            <ul id="comment-container" class="comment-container"></ul>
         </div>
         
         <br/><br/>
-        <div>
-            Return to the main page:
+
+    </body>  
+    <div> Return to the main page:
             <a href="/index.html" >
                 <div class="buttontext">
                     <span>R</span>
@@ -38,6 +57,5 @@
                     <span>N</span>
                 </div>
             </a>
-        </div>
-    </body>   
+        </div> 
 </html>
