@@ -19,63 +19,61 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import java.util.Comparator;
 
-//request has a: name, minute duration, attendees collection
-//Each event in the Collection has a: name, time range, attendees collection
-//time range gives start time, end time, and duration
 public final class FindMeetingQuery {
     public Collection<TimeRange> query(Collection<Event> events, MeetingRequest request) {
         
-        Collection<String> requestedAttendees = request.getAttendees();        
-        Collection<TimeRange> conflicts = new Collection<>();
-
-        //find events that are potential conflicts
-        for (Event event : events.asIterable()){
-            boolean matches = False;
-            Set<String> eventAttendees = event.getAttendees();
+        //remove events irrelevant to group of requested attendees
+        Collection<String> neededAttendees = new ArrayList<String>();
+        neededAttendees = request.getAttendees();
+        for (Event event : events){
+            boolean matches = false;
+            Collection<String> eventAttendees = new ArrayList<String>();
+            eventAttendees = event.getAttendees();
             attendees_loop:
-            for (String eventAttendee : eventAttendees.asIterable()){
-                for (String requestedAttendee : requestedAttendees.asIterable()){
-                    if (requestedAttendee == eventAttendee){
-                        matches = True;
+            for (String eventAttendee : eventAttendees){
+                for (String neededAttendee : neededAttendees){
+                    if (neededAttendee == eventAttendee){
+                        matches = true;
                         break attendees_loop;
                     }
                 }
             }
-            if (matches == True){
-                conflicts.add(event.getWhen());
+            if (matches == false){
+                events.remove(event);
             }
         }
 
-        //sort conflict events by start time
-        Collections.sort(conflicts, new ORDER_BY_START());
-        
-        Collection<TimeRange> allOpenTimes = new Collection<>();
-
-        long timeNeeded = request.getDuration();
-
-        //begin looking for possible slots beginning with the earliest time
-        int start = START_OF_DAY;
-        int end = START_OF_DAY + timeNeeded;
-        
-        //add a potential timeslot
-        if (contains(conflict.get(0), end) == False){
-            int end = (conflict.get(1)).start();
-            TimeRange openTime = fromStartEnd(start, end, False);
-            allOpenTimes.add(openTime);
+        //NOTE: may contain duplicates
+        //create sorted array of unavailable TimeRanges
+        List<TimeRange> busyTimes = new ArrayList<TimeRange>();  
+        for (Event event: events){
+            busyTimes.add(event.getWhen());
         }
+        
+        // Comparator<TimeRange> ORDER_BY_END = new Comparator<TimeRange>();
+        Collections.sort(busyTimes, TimeRange.ORDER_BY_START);
+        
+        List<TimeRange> allOpenTimes = new ArrayList<TimeRange>();
 
-        //how to run through all conflicts 
-        // for (int i=0; i<conflicts.size(); i++){ 
-        //     conflicts.get(i); 
-        // }
+        //start-end must be > || == duration
+        long timeNeeded = request.getDuration();
+        int openStart = TimeRange.START_OF_DAY;;
 
+        //run through all busy times and check if slots around are options
+        //NOTE/TODO: check bounds, account for overlapping events
         //Reminder: no possible slot should start/end earlier/later than START_OF_DAY/END_OF_DAY
 
-        //function should return the collection of TimeRanges free for meetings
+        for (int i=0; i<busyTimes.size(); i++){
+            int openEnd = (busyTimes.get(i)).start();
+            if ((openStart-openEnd) >= timeNeeded) {
+                TimeRange openTime = TimeRange.fromStartEnd(openStart, openEnd, false);
+                allOpenTimes.add(openTime); 
+            }
+            openStart = (busyTimes.get(i)).end();
+        }
+        
         return allOpenTimes;
-  }
+    }
 }
