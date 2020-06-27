@@ -19,63 +19,86 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import java.util.Comparator;
 
-//request has a: name, minute duration, attendees collection
-//Each event in the Collection has a: name, time range, attendees collection
-//time range gives start time, end time, and duration
 public final class FindMeetingQuery {
     public Collection<TimeRange> query(Collection<Event> events, MeetingRequest request) {
         
-        Collection<String> requestedAttendees = request.getAttendees();        
-        Collection<TimeRange> conflicts = new Collection<>();
+        List<TimeRange> allOpenTimes = new ArrayList<TimeRange>();
+        Collection<String> neededAttendees = new ArrayList<String>();
+        neededAttendees = request.getAttendees();
+        long timeNeeded = request.getDuration();
+        int dayStart = TimeRange.START_OF_DAY;
+        int dayEnd = TimeRange.END_OF_DAY;
+        TimeRange entireDay = TimeRange.WHOLE_DAY;
 
-        //find events that are potential conflicts
-        for (Event event : events.asIterable()){
-            boolean matches = False;
-            Set<String> eventAttendees = event.getAttendees();
-            attendees_loop:
-            for (String eventAttendee : eventAttendees.asIterable()){
-                for (String requestedAttendee : requestedAttendees.asIterable()){
-                    if (requestedAttendee == eventAttendee){
-                        matches = True;
-                        break attendees_loop;
+        if ( timeNeeded > entireDay.duration() ){
+            return allOpenTimes;
+        }
+
+        if ( timeNeeded == 0 || events == null || events.isEmpty() || neededAttendees.isEmpty() || neededAttendees == null ){
+            allOpenTimes.add(entireDay);
+            return allOpenTimes; 
+        }
+
+        //remove events irrelevant to group of requested attendees
+        Collection<String> eventAttendees = new ArrayList<String>();
+        int overlap = 0;
+        int anyConflict = 0;
+        for (Event event : events) {
+            eventAttendees = event.getAttendees();
+            if ( ( event.getWhen().duration() <= 0 ) || ( eventAttendees.isEmpty() ) ){
+                events.remove(event);
+            }
+            else {
+               for (String neededAttendee : neededAttendees){
+                    if ( eventAttendees.contains(neededAttendee) ){
+                        overlap++;
+                        anyConflict = 1;
+                    }
+                }
+                if (overlap == 0) {
+                    if (events.size() <= 1){
+                        allOpenTimes.add(entireDay);
+                        return allOpenTimes;
+                    }
+                    else {
+                        events.remove(event);
+                        System.out.println("STEP 8");
                     }
                 }
             }
-            if (matches == True){
-                conflicts.add(event.getWhen());
+            overlap = 0;
+        }
+        
+        //create sorted array of unavailable TimeRanges
+        List<TimeRange> busyTimes = new ArrayList<TimeRange>();  
+        for (Event event: events){
+            busyTimes.add(event.getWhen());
+        }
+        Collections.sort(busyTimes, TimeRange.ORDER_BY_START);
+
+        //consider slots starting at start of day
+        int prospectStart = dayStart;
+        int prospectEnd;
+        TimeRange prospect;
+        for (int i=0; i<busyTimes.size(); i++){
+            prospectEnd = busyTimes.get(i).start();
+            prospect = TimeRange.fromStartEnd(prospectStart, prospectEnd, false);
+            if ( prospect.duration() >= timeNeeded ){
+                allOpenTimes.add(prospect); 
             }
+            prospectStart = busyTimes.get(i).end();
         }
 
-        //sort conflict events by start time
-        Collections.sort(conflicts, new ORDER_BY_START());
-        
-        Collection<TimeRange> allOpenTimes = new Collection<>();
-
-        long timeNeeded = request.getDuration();
-
-        //begin looking for possible slots beginning with the earliest time
-        int start = START_OF_DAY;
-        int end = START_OF_DAY + timeNeeded;
-        
-        //add a potential timeslot
-        if (contains(conflict.get(0), end) == False){
-            int end = (conflict.get(1)).start();
-            TimeRange openTime = fromStartEnd(start, end, False);
-            allOpenTimes.add(openTime);
+        //consider slot at end of day
+        Collections.sort(busyTimes, TimeRange.ORDER_BY_END);  
+        TimeRange latest = busyTimes.get(busyTimes.size() - 1);      
+        prospect = TimeRange.fromStartEnd(latest.end(), dayEnd, true);
+        if ( prospect.duration() >= timeNeeded ){
+            allOpenTimes.add(prospect); 
         }
-
-        //how to run through all conflicts 
-        // for (int i=0; i<conflicts.size(); i++){ 
-        //     conflicts.get(i); 
-        // }
-
-        //Reminder: no possible slot should start/end earlier/later than START_OF_DAY/END_OF_DAY
-
-        //function should return the collection of TimeRanges free for meetings
+        
         return allOpenTimes;
-  }
+    }
 }
