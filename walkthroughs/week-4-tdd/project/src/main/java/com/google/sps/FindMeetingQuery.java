@@ -40,44 +40,45 @@ public final class FindMeetingQuery {
             allOpenTimes.add(entireDay);
             return allOpenTimes; 
         }
- 
+
         //remove events irrelevant to group of requested attendees
         Collection<String> eventAttendees = new ArrayList<String>();
         int overlap = 0;
         int anyConflict = 0;
-        for (Event event : events){
+        for (Event event : events) {
             eventAttendees = event.getAttendees();
             if ( ( event.getWhen().duration() <= 0 ) || ( eventAttendees.isEmpty() ) ){
                 events.remove(event);
             }
             else {
-                for (String neededAttendee : neededAttendees){
+               for (String neededAttendee : neededAttendees){
                     if ( eventAttendees.contains(neededAttendee) ){
                         overlap++;
                         anyConflict = 1;
                     }
                 }
-                if (overlap == 0){
-                    events.remove(event);
+                if (overlap == 0) {
+                    if (events.size() <= 1){
+                        allOpenTimes.add(entireDay);
+                        return allOpenTimes;
+                    }
+                    else {
+                        events.remove(event);
+                        System.out.println("STEP 8");
+                    }
                 }
             }
             overlap = 0;
         }
-
-        if ( events.isEmpty() || anyConflict == 0 ){
-            allOpenTimes.add(entireDay);
-            return allOpenTimes;
-        }
         
-        //NOTE: may contain duplicates
         //create sorted array of unavailable TimeRanges
         List<TimeRange> busyTimes = new ArrayList<TimeRange>();  
         for (Event event: events){
             busyTimes.add(event.getWhen());
         }
+        Collections.sort(busyTimes, TimeRange.ORDER_BY_START);
 
         //consider slots starting at start of day
-        Collections.sort(busyTimes, TimeRange.ORDER_BY_START);
         int prospectStart = dayStart;
         int prospectEnd;
         TimeRange prospect;
