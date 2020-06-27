@@ -24,54 +24,78 @@ import java.util.Comparator;
 public final class FindMeetingQuery {
     public Collection<TimeRange> query(Collection<Event> events, MeetingRequest request) {
         
-        //remove events irrelevant to group of requested attendees
+        List<TimeRange> allOpenTimes = new ArrayList<TimeRange>();
         Collection<String> neededAttendees = new ArrayList<String>();
         neededAttendees = request.getAttendees();
+        long timeNeeded = request.getDuration();
+        int dayStart = TimeRange.START_OF_DAY;
+        int dayEnd = TimeRange.END_OF_DAY;
+        TimeRange entireDay = TimeRange.WHOLE_DAY;
+
+        if ( timeNeeded == 0 || events == null || events.isEmpty() || neededAttendees.isEmpty() || neededAttendees == null ){
+            allOpenTimes.add(entireDay);
+            return allOpenTimes; 
+        }
+        if ( timeNeeded > entireDay.duration() ){
+            return allOpenTimes;
+        }
+ 
+        
+        //remove events irrelevant to group of requested attendees
+        Collection<String> eventAttendees = new ArrayList<String>();
+        int overlap = 0;
+        int anyConflict = 0;
         for (Event event : events){
-            boolean matches = false;
-            Collection<String> eventAttendees = new ArrayList<String>();
             eventAttendees = event.getAttendees();
-            attendees_loop:
-            for (String eventAttendee : eventAttendees){
-                for (String neededAttendee : neededAttendees){
-                    if (neededAttendee == eventAttendee){
-                        matches = true;
-                        break attendees_loop;
-                    }
-                }
-            }
-            if (matches == false){
+            if ( ( event.getWhen().duration() <= 0 ) || ( eventAttendees.isEmpty() ) ){
                 events.remove(event);
             }
+            else {
+                for (String neededAttendee : neededAttendees){
+                    if ( eventAttendees.contains(neededAttendee) ){
+                        overlap++;
+                        anyConflict = 1;
+                    }
+                }
+                if (overlap == 0){
+                    events.remove(event);
+                }
+            }
+            overlap = 0;
         }
 
+        if ( events.isEmpty() || anyConflict == 0 ){
+            allOpenTimes.add(entireDay);
+            return allOpenTimes;
+        }
+        
         //NOTE: may contain duplicates
         //create sorted array of unavailable TimeRanges
         List<TimeRange> busyTimes = new ArrayList<TimeRange>();  
         for (Event event: events){
             busyTimes.add(event.getWhen());
         }
-        
-        // Comparator<TimeRange> ORDER_BY_END = new Comparator<TimeRange>();
+
+        //consider slots starting at start of day
         Collections.sort(busyTimes, TimeRange.ORDER_BY_START);
-        
-        List<TimeRange> allOpenTimes = new ArrayList<TimeRange>();
-
-        //start-end must be > || == duration
-        long timeNeeded = request.getDuration();
-        int openStart = TimeRange.START_OF_DAY;;
-
-        //run through all busy times and check if slots around are options
-        //NOTE/TODO: check bounds, account for overlapping events
-        //Reminder: no possible slot should start/end earlier/later than START_OF_DAY/END_OF_DAY
-
+        int prospectStart = dayStart;
+        int prospectEnd;
+        TimeRange prospect;
         for (int i=0; i<busyTimes.size(); i++){
-            int openEnd = (busyTimes.get(i)).start();
-            if ((openStart-openEnd) >= timeNeeded) {
-                TimeRange openTime = TimeRange.fromStartEnd(openStart, openEnd, false);
-                allOpenTimes.add(openTime); 
+            prospectEnd = busyTimes.get(i).start();
+            prospect = TimeRange.fromStartEnd(prospectStart, prospectEnd, false);
+            if ( prospect.duration() >= timeNeeded ){
+                allOpenTimes.add(prospect); 
             }
-            openStart = (busyTimes.get(i)).end();
+            prospectStart = busyTimes.get(i).end();
+        }
+
+        //consider slot at end of day
+        Collections.sort(busyTimes, TimeRange.ORDER_BY_END);  
+        TimeRange latest = busyTimes.get(busyTimes.size() - 1);      
+        prospect = TimeRange.fromStartEnd(latest.end(), dayEnd, true);
+        if ( prospect.duration() >= timeNeeded ){
+            allOpenTimes.add(prospect); 
         }
         
         return allOpenTimes;
