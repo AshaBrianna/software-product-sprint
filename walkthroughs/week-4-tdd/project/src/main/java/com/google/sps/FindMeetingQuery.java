@@ -32,15 +32,15 @@ public final class FindMeetingQuery {
         int dayEnd = TimeRange.END_OF_DAY;
         TimeRange entireDay = TimeRange.WHOLE_DAY;
 
+        if ( timeNeeded > entireDay.duration() ){
+            return allOpenTimes;
+        }
+
         if ( timeNeeded == 0 || events == null || events.isEmpty() || neededAttendees.isEmpty() || neededAttendees == null ){
             allOpenTimes.add(entireDay);
             return allOpenTimes; 
         }
-        if ( timeNeeded > entireDay.duration() ){
-            return allOpenTimes;
-        }
  
-        
         //remove events irrelevant to group of requested attendees
         Collection<String> eventAttendees = new ArrayList<String>();
         int overlap = 0;
